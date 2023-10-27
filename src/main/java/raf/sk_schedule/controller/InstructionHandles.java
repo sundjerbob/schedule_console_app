@@ -2,91 +2,28 @@ package raf.sk_schedule.controller;
 
 import raf.sk_schedule.api.ScheduleManager;
 import raf.sk_schedule.exception.ScheduleException;
+import raf.sk_schedule.exception.ScheduleIOException;
 import raf.sk_schedule.model.RoomProperties;
 import raf.sk_schedule.model.ScheduleSlot;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.text.ParseException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
+public class InstructionHandles {
 
-public class ScheduleController {
-    ScheduleManager scheduleManager;
 
-    Scanner inputScanner;
+    private ScheduleManager scheduleManager;
 
-    final String help;
+    public Handle getHandle(String instruction) {
 
-    final String helpFilePath = "src/main/java/raf/sk_schedule/toolkit/help.txt";
-
-    public ScheduleController(ScheduleManager scheduleManager) {
-
-        this.inputScanner = new Scanner(System.in);
-        this.scheduleManager = scheduleManager;
-
-        try {
-            help = Files.readString(Path.of(helpFilePath), StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            throw new RuntimeException("Help document not found!");
-        }
-
+        return handlesMap.get(instruction);
     }
 
-    public boolean actionScheduler() throws Exception {
-        String line = inputScanner.nextLine().trim();
-
-
-        if ("schedule_close".equalsIgnoreCase(line)) {
-            System.out.println("Closing the program.");
-            return false;
-        }
-        if ("--help".equalsIgnoreCase(line) || "-h".equalsIgnoreCase(line)) {
-            System.out.println(help);
-            return true;
-        }
-        if ("list_schedule".equalsIgnoreCase(line)) {
-            getWholeSchedule();
-            return true;
-        }
-        if ("schedule_slot".equalsIgnoreCase(line)) {
-            scheduleTimeSlot();
-            return true;
-        }
-        if ("move_slot".equalsIgnoreCase(line)) {
-
-            return true;
-        }
-        if ("remove_slot".equalsIgnoreCase(line)) {
-
-            return true;
-        }
-
-        if ("add_room".equalsIgnoreCase(line)) {
-            addRoom();
-            return true;
-        }
-        if ("update_room".equalsIgnoreCase(line)) {
-
-            return true;
-        }
-        if ("remove_room".equalsIgnoreCase(line)) {
-
-            return true;
-
-        }
-        if ("list_rooms".equalsIgnoreCase(line)) {
-            getAllRooms();
-            return true;
-        }
-        return false;
-    }
-
-
-    private void scheduleTimeSlot() throws Exception {
-
+    Handle scheduleTimeSlot = inputScanner -> {
         ScheduleSlot.Builder slotBuilder = new ScheduleSlot.Builder();
 
         System.out.println("Enter date in format \"yyyy-mm-dd\" (\"2023-10-23\") or day of the week on witch the slot will be scheduled on : ");
@@ -178,10 +115,10 @@ public class ScheduleController {
                     + " and ends at: " + slot.getEndAsString().split(" ")[1] + ".");
 
 
-    }
+    };
 
-    private void addRoom() {
 
+    private Handle addRoom = inputScanner -> {
         RoomProperties.Builder roomBuilder = new RoomProperties.Builder();
 
         System.out.println("Enter the room name: ");
@@ -219,20 +156,98 @@ public class ScheduleController {
         scheduleManager.addRoom(newRoom);
 
         System.out.println("Room " + newRoom.getName() + " has been created!");
-    }
+
+    };
+
+    private Handle removeRoom = inputScanner -> {
+        System.out.println("Enter the name of the room you want to be removed: ");
+        String roomName = inputScanner.nextLine();
+        try {
+            scheduleManager.deleteRoom(roomName);
+        } catch (ScheduleException e) {
+            System.out.println(e.getMessage());
+        }
+        System.out.println("Room " + roomName + " has been removed!");
+    };
+
+    private Handle updateRoom = inputScanner -> {
+
+        System.out.println("Enter the name of the room you want to modify: ");
+        String roomName = inputScanner.nextLine().trim();
+        if (scheduleManager.hasRoom(roomName)) {
+            System.out.println("There is no room with the selected name.");
+            return;
+        }
+        RoomProperties.Builder roomBuilder = new RoomProperties.Builder();
+
+        System.out.println("Enter new the room name or just press enter if you want to keep current room name:");
+        String newRoomName = inputScanner.nextLine();
+        roomBuilder.setName(newRoomName.isBlank() ? roomName : newRoomName);
+
+        System.out.println("Enter room capacity that is positive whole number or just press enter if you want to keep current capacity:");
+        String newCapacity = inputScanner.nextLine().trim();
+        if (!newCapacity.isBlank())
+            roomBuilder.setCapacity(Integer.parseInt(inputScanner.nextLine()));
+
+        System.out.println("Does this room have computers? Type \"y\" if yes or \"n\" if no or just press enter if you want to keep current state:");
+        String hasComputers = inputScanner.nextLine().trim();
+        if (!hasComputers.isBlank())
+            roomBuilder.setHasComputers(hasComputers.equalsIgnoreCase("y"));
 
 
-    private void removeRoom() {
-
-    }
-
-    private void updateRoom() {
-
+        System.out.println("Does this room have a projector? Type \"y\" if yes or \"n\" if no or just press enter if you want to keep current state:");
+        String hasProjector = inputScanner.nextLine().trim();
+        if (!hasProjector.isBlank())
+            roomBuilder.setHasProjector(hasProjector.equalsIgnoreCase("y"));
 
 
-    }
+        while (true) {
+            System.out.println("Enter additional attributes name you want to add or change, or type in \"done\" if you want to finish editing rooms information: ");
+            String line = inputScanner.nextLine().trim();
 
-    private void getWholeSchedule() {
+            if (line.isEmpty())
+                continue;
+
+            if (line.equalsIgnoreCase("done"))
+                break;
+
+            System.out.println("Enter value for attribute named \"" + line + "\" :");
+
+            roomBuilder.addExtra(line, inputScanner.nextLine().trim());
+        }
+
+
+    };
+
+    private Handle importRooms = inputScanner -> {
+        System.out.println("Type in the path to csv file to import roomProperties.");
+        String fileName = inputScanner.nextLine().trim();
+
+        try {
+            scheduleManager.loadRoomsSCV(fileName);
+        } catch (ScheduleIOException | IOException e) {
+            System.out.println(e.getMessage());
+        }
+
+    };
+
+    private Handle importSchedule = inputScanner -> {
+        System.out.println("Type in the path to csv file to import roomProperties.");
+        String fileName = inputScanner.nextLine().trim();
+
+        try {
+            int numberOfRows = scheduleManager.loadRoomsSCV(fileName);
+            System.out.println(
+                    "Rooms import finished successfully; "
+                    + numberOfRows + " row" + ((numberOfRows > 1)? "s are":" is") + " added!");
+
+        } catch (ScheduleIOException | IOException e) {
+            System.out.println(e.getMessage());
+        }
+
+    };
+
+    private Handle getWholeSchedule = inputScanner -> {
 
         List<ScheduleSlot> schedule = scheduleManager.getWholeSchedule();
         if (schedule.isEmpty())
@@ -240,14 +255,38 @@ public class ScheduleController {
         for (ScheduleSlot curr : schedule) {
             System.out.println(curr);
         }
-    }
+    };
 
-    private void getAllRooms() {
+    private Handle getAllRooms = inputScanner -> {
         List<RoomProperties> rooms = scheduleManager.getAllRooms();
         if (rooms.isEmpty())
             System.out.println("There is no rooms in schedule.");
         for (RoomProperties curr : rooms) {
             System.out.println(curr);
         }
+    };
+
+
+    private Map<String, Handle> handlesMap =
+            Map.of(
+                    "schedule_slot", scheduleTimeSlot,
+                    "add_room", addRoom,
+                    "remove_room", removeRoom,
+                    "edit_room", updateRoom,
+                    "list_rooms", getAllRooms,
+                    "show_schedule", getWholeSchedule,
+                    "import_rooms", importRooms
+            );
+
+
+    public InstructionHandles(ScheduleManager scheduleManager) {
+        this.scheduleManager = scheduleManager;
     }
+
+
+    public interface Handle {
+        void handle(Scanner inputScanner) throws ParseException;
+    }
+
+
 }
