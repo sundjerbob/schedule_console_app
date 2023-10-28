@@ -15,7 +15,7 @@ import java.util.Scanner;
 public class InstructionHandles {
 
 
-    private  ScheduleManager scheduleManager;
+    private ScheduleManager scheduleManager;
 
 
     public InstructionHandles(ScheduleManager scheduleManager) {
@@ -25,6 +25,7 @@ public class InstructionHandles {
     public interface Handle {
         void handle(Scanner inputScanner);
     }
+
     Handle scheduleTimeSlot = inputScanner -> {
         ScheduleSlot.Builder slotBuilder = new ScheduleSlot.Builder();
 
@@ -240,7 +241,7 @@ public class InstructionHandles {
     };
 
     private Handle importRooms = inputScanner -> {
-        System.out.println("Type in the path to csv file to import roomProperties.");
+        System.out.println("Type in the path to csv file to import roomProperties:");
         String fileName = inputScanner.nextLine().trim();
 
         try {
@@ -257,17 +258,22 @@ public class InstructionHandles {
     };
 
     private Handle importSchedule = inputScanner -> {
-        System.out.println("Type in the path to csv file to import roomProperties.");
+        if (scheduleManager.getAllRooms().isEmpty()) {
+            System.out.println("You currently don't have any rooms in witch you could schedule slots, you need to import rooms first. ");
+            return;
+        }
+        System.out.println("Type in the path to csv file to import schedule:");
         String fileName = inputScanner.nextLine().trim();
 
         try {
-            int numberOfRows = scheduleManager.loadRoomsSCV(fileName);
+            int numberOfRows = scheduleManager.loadScheduleSCV(fileName);
 
             System.out.println(
                     "Schedule import finished successfully; "
                             + numberOfRows + " row" + (numberOfRows > 1 ? "s are" : " is") + " added!");
-        } catch (ScheduleIOException | IOException e) {
-            System.out.println(e.getMessage());
+        } catch (ScheduleIOException | ScheduleException | IOException e) {
+            System.out.println(e.getMessage()
+            );
         }
 
     };
@@ -304,10 +310,6 @@ public class InstructionHandles {
                     "import_rooms", importRooms,
                     "import_schedule", importSchedule
             );
-
-
-
-
 
 
     public Handle getHandle(String instruction) {
