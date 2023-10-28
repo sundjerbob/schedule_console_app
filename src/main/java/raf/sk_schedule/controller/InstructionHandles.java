@@ -8,7 +8,6 @@ import raf.sk_schedule.model.ScheduleSlot;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -16,13 +15,16 @@ import java.util.Scanner;
 public class InstructionHandles {
 
 
-    private ScheduleManager scheduleManager;
+    private  ScheduleManager scheduleManager;
 
-    public Handle getHandle(String instruction) {
 
-        return handlesMap.get(instruction);
+    public InstructionHandles(ScheduleManager scheduleManager) {
+        this.scheduleManager = scheduleManager;
     }
 
+    public interface Handle {
+        void handle(Scanner inputScanner);
+    }
     Handle scheduleTimeSlot = inputScanner -> {
         ScheduleSlot.Builder slotBuilder = new ScheduleSlot.Builder();
 
@@ -60,14 +62,23 @@ public class InstructionHandles {
 
             System.out.println("Enter starting time in format \"hours:minutes\" (\"12:25\") : ");
             String startingTime = inputScanner.nextLine().trim();
-            slotBuilder.setStart(scheduleOn + " " + startingTime);
+
+            try {
+                slotBuilder.setStart(scheduleOn + " " + startingTime);
+            } catch (ParseException e) {
+                System.out.println(e.getMessage());
+            }
 
 
             System.out.println("Enter a duration in minutes (whole number), or ending time in format \"hours:minutes\" (\"12:25\") :");
             String endTime = inputScanner.nextLine().trim();
-            if (endTime.matches("\\d{2}:\\d{2}"))
-                slotBuilder.setEnd(scheduleOn + " " + endTime);
-            else
+            if (endTime.matches("\\d{2}:\\d{2}")) {
+                try {
+                    slotBuilder.setEnd(scheduleOn + " " + endTime);
+                } catch (ParseException e) {
+                    System.out.println(e.getMessage());
+                }
+            } else
                 slotBuilder.setDuration(Long.parseLong(endTime));
         }
 
@@ -99,7 +110,11 @@ public class InstructionHandles {
 
         // ************** adding the slot to schedule ************** //
         ScheduleSlot slot = slotBuilder.build();
-        scheduleManager.scheduleTimeSlot(slot);
+        try {
+            scheduleManager.scheduleTimeSlot(slot);
+        } catch (ParseException e) {
+            System.out.println(e.getMessage());
+        }
         // ********************************************************* //
 
         if (slot.hasAttribute("weekly"))
@@ -109,10 +124,15 @@ public class InstructionHandles {
                     " and ends at: " + slot.getAttribute("endTime") : " with a duration of " + slot.getDuration() + " minutes ")
                     + " starting from date: " + slot.getAttribute("start")
                     + " until date: " + slot.getAttribute("until"));
-        else
-            System.out.println("The new slot has been scheduled on date: " + slot.getStartAsString().split(" ")[0]
-                    + "starts at: " + slot.getStartAsString().split(" ")[1] + ", has duration of " + slot.getDuration() + " minutes, "
-                    + " and ends at: " + slot.getEndAsString().split(" ")[1] + ".");
+        else {
+            try {
+                System.out.println("The new slot has been scheduled on date: " + slot.getStartAsString().split(" ")[0]
+                        + "starts at: " + slot.getStartAsString().split(" ")[1] + ", has duration of " + slot.getDuration() + " minutes, "
+                        + " and ends at: " + slot.getEndAsString().split(" ")[1] + ".");
+            } catch (ParseException e) {
+                System.out.println(e.getMessage());
+            }
+        }
 
 
     };
@@ -224,7 +244,12 @@ public class InstructionHandles {
         String fileName = inputScanner.nextLine().trim();
 
         try {
-            scheduleManager.loadRoomsSCV(fileName);
+
+            int numberOfRows = scheduleManager.loadRoomsSCV(fileName);
+            System.out.println(
+                    "Room import finished successfully; "
+                            + numberOfRows + " row" + (numberOfRows > 1 ? "s are" : " is") + " added!"
+            );
         } catch (ScheduleIOException | IOException e) {
             System.out.println(e.getMessage());
         }
@@ -237,15 +262,16 @@ public class InstructionHandles {
 
         try {
             int numberOfRows = scheduleManager.loadRoomsSCV(fileName);
-            System.out.println(
-                    "Rooms import finished successfully; "
-                    + numberOfRows + " row" + ((numberOfRows > 1)? "s are":" is") + " added!");
 
+            System.out.println(
+                    "Schedule import finished successfully; "
+                            + numberOfRows + " row" + (numberOfRows > 1 ? "s are" : " is") + " added!");
         } catch (ScheduleIOException | IOException e) {
             System.out.println(e.getMessage());
         }
 
     };
+
 
     private Handle getWholeSchedule = inputScanner -> {
 
@@ -275,17 +301,18 @@ public class InstructionHandles {
                     "edit_room", updateRoom,
                     "list_rooms", getAllRooms,
                     "show_schedule", getWholeSchedule,
-                    "import_rooms", importRooms
+                    "import_rooms", importRooms,
+                    "import_schedule", importSchedule
             );
 
 
-    public InstructionHandles(ScheduleManager scheduleManager) {
-        this.scheduleManager = scheduleManager;
-    }
 
 
-    public interface Handle {
-        void handle(Scanner inputScanner) throws ParseException;
+
+
+    public Handle getHandle(String instruction) {
+
+        return handlesMap.get(instruction);
     }
 
 
