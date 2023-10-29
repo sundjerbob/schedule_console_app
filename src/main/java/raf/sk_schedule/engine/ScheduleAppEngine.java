@@ -3,6 +3,8 @@ package raf.sk_schedule.engine;
 import raf.sk_schedule.api.ScheduleManager;
 import raf.sk_schedule.controller.ScheduleController;
 
+import java.util.Scanner;
+
 
 public class ScheduleAppEngine extends Thread {
     private final ScheduleManager scheduleManager;
@@ -18,11 +20,31 @@ public class ScheduleAppEngine extends Thread {
 
         ScheduleController controller = new ScheduleController(scheduleManager);
 
-        System.out.println("------------------------------------------------------------------------\n" +
-                "Hello from " + scheduleManager.getClass().getSimpleName() + "!");
+
+        System.out.println
+                (
+                        "------------------------------------------------------------------------\n"
+                                + "Hello from " + scheduleManager.getClass().getSimpleName() + "!\n"
+                                + "First you need to configure schedule component...\n"
+                                + "Enter the date in format yyyy-mm-dd \"2023-10-14\", from witch the schedule will start:"
+                );
+
+        Scanner scanner = new Scanner(System.in);
+
+        String firstDate = scanner.nextLine().trim();
+
+        System.out.println("Enter the date in format yyyy-mm-dd \"2023-10-14\", when the schedule will end:");
+
+        String lastDate = scanner.nextLine().trim();
+
+        scheduleManager.initialize(firstDate, lastDate);
+
+        System.out.println("Your schedule is initialized, starting from " + firstDate + " and ending at " + lastDate);
+
+
         try {
             do {
-                System.out.println("\nType 'schedule_close' to exit, -h or --help to list all the commands you can use.\nEnter commands:");
+                System.out.println("Type 'schedule_close' to exit, -h or --help to list all the commands you can use.\nEnter commands:");
 
             } while (controller.actionScheduler());
         } catch (Exception e) {

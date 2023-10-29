@@ -26,14 +26,9 @@
             <groupId>raf.sk_schedule</groupId>
             <artifactId>schedule_Impl_1</artifactId>
             <version>1.0-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>raf.sk_schedule</groupId>
-            <artifactId>schedule_Impl_2</artifactId>
-            <version>1.0-SNAPSHOT</version>
             <scope>runtime</scope>
         </dependency>
+
     </dependencies>
 
 </project>

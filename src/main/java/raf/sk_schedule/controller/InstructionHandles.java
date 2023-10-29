@@ -3,6 +3,7 @@ package raf.sk_schedule.controller;
 import raf.sk_schedule.api.ScheduleManager;
 import raf.sk_schedule.exception.ScheduleException;
 import raf.sk_schedule.exception.ScheduleIOException;
+import raf.sk_schedule.filter.SearchCriteria;
 import raf.sk_schedule.model.RoomProperties;
 import raf.sk_schedule.model.ScheduleSlot;
 
@@ -10,6 +11,7 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Scanner;
 
 public class InstructionHandles {
@@ -25,6 +27,7 @@ public class InstructionHandles {
     public interface Handle {
         void handle(Scanner inputScanner);
     }
+
 
     Handle scheduleTimeSlot = inputScanner -> {
         ScheduleSlot.Builder slotBuilder = new ScheduleSlot.Builder();
@@ -113,8 +116,9 @@ public class InstructionHandles {
         ScheduleSlot slot = slotBuilder.build();
         try {
             scheduleManager.scheduleTimeSlot(slot);
-        } catch (ParseException e) {
+        } catch (ParseException| ScheduleException e) {
             System.out.println(e.getMessage());
+            return;
         }
         // ********************************************************* //
 
@@ -134,6 +138,9 @@ public class InstructionHandles {
                 System.out.println(e.getMessage());
             }
         }
+    };
+
+    private Handle moveSlot = inputScanner -> {
 
 
     };
@@ -146,9 +153,12 @@ public class InstructionHandles {
 
         roomBuilder.setName(inputScanner.nextLine().trim());
 
-        System.out.println("Enter room capacity that is positive whole number: ");
 
-        roomBuilder.setCapacity(Integer.parseInt(inputScanner.nextLine()));
+        System.out.println("Enter room capacity that is positive whole number: ");
+        String capacity = inputScanner.nextLine().trim();
+        if (capacity.matches("\\d+"))
+            roomBuilder.setCapacity(Integer.parseInt(capacity));
+        else roomBuilder.setCapacity(1);
 
         System.out.println("Does this room have computers? Type \"y\" if yes or \"n\" if no.");
 
@@ -174,9 +184,13 @@ public class InstructionHandles {
         }
 
         RoomProperties newRoom = roomBuilder.build();
-        scheduleManager.addRoom(newRoom);
+        try {
+            scheduleManager.addRoom(newRoom);
+            System.out.println("Room " + newRoom.getName() + " has been created!");
 
-        System.out.println("Room " + newRoom.getName() + " has been created!");
+        } catch (ScheduleException e) {
+            System.out.println(e.getMessage());
+        }
 
     };
 
@@ -196,7 +210,7 @@ public class InstructionHandles {
         System.out.println("Enter the name of the room you want to modify: ");
         String roomName = inputScanner.nextLine().trim();
         if (scheduleManager.hasRoom(roomName)) {
-            System.out.println("There is no room with the selected name.");
+            System.out.println("There is no room with the selected name. Please choose another name.");
             return;
         }
         RoomProperties.Builder roomBuilder = new RoomProperties.Builder();
@@ -299,16 +313,37 @@ public class InstructionHandles {
     };
 
 
+    private Handle searchSchedule = inputScanner -> {
+
+        SearchCriteria.Builder searchBuilder = new SearchCriteria.Builder();
+        while (true) {
+            System.out.println("Enter name of the attribute you want to apply search to  \"done\" if you want to finish configuring search parameters: ");
+            String line = inputScanner.nextLine().trim();
+
+            if (line.isEmpty())
+                continue;
+
+            if (line.equalsIgnoreCase("done"))
+                break;
+
+            System.out.println("Enter value for attribute named \"" + line + "\" :");
+
+            searchBuilder.setCriteria(line, inputScanner.nextLine().trim());
+        }
+
+    };
     private Map<String, Handle> handlesMap =
             Map.of(
                     "schedule_slot", scheduleTimeSlot,
+                    "move_slot", moveSlot,
                     "add_room", addRoom,
                     "remove_room", removeRoom,
                     "edit_room", updateRoom,
                     "list_rooms", getAllRooms,
                     "show_schedule", getWholeSchedule,
                     "import_rooms", importRooms,
-                    "import_schedule", importSchedule
+                    "import_schedule", importSchedule,
+                    "search_schedule", searchSchedule
             );
 
 
