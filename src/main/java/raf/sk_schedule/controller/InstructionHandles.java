@@ -9,10 +9,7 @@ import raf.sk_schedule.model.ScheduleSlot;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Scanner;
+import java.util.*;
 
 public class InstructionHandles {
 
@@ -20,14 +17,9 @@ public class InstructionHandles {
     private ScheduleManager scheduleManager;
 
 
-    public InstructionHandles(ScheduleManager scheduleManager) {
-        this.scheduleManager = scheduleManager;
-    }
-
     public interface Handle {
         void handle(Scanner inputScanner);
     }
-
 
     Handle scheduleTimeSlot = inputScanner -> {
         ScheduleSlot.Builder slotBuilder = new ScheduleSlot.Builder();
@@ -116,7 +108,7 @@ public class InstructionHandles {
         ScheduleSlot slot = slotBuilder.build();
         try {
             scheduleManager.scheduleTimeSlot(slot);
-        } catch (ParseException| ScheduleException e) {
+        } catch (ParseException | ScheduleException e) {
             System.out.println(e.getMessage());
             return;
         }
@@ -141,7 +133,6 @@ public class InstructionHandles {
     };
 
     private Handle moveSlot = inputScanner -> {
-
 
     };
 
@@ -262,8 +253,7 @@ public class InstructionHandles {
 
             int numberOfRows = scheduleManager.loadRoomsSCV(fileName);
             System.out.println(
-                    "Room import finished successfully; "
-                            + numberOfRows + " row" + (numberOfRows > 1 ? "s are" : " is") + " added!"
+                    "Room import finished successfully, " + numberOfRows + " row" + (numberOfRows > 1 ? "s are" : " is") + " added!"
             );
         } catch (ScheduleIOException | IOException e) {
             System.out.println(e.getMessage());
@@ -332,19 +322,29 @@ public class InstructionHandles {
         }
 
     };
-    private Map<String, Handle> handlesMap =
-            Map.of(
-                    "schedule_slot", scheduleTimeSlot,
-                    "move_slot", moveSlot,
-                    "add_room", addRoom,
-                    "remove_room", removeRoom,
-                    "edit_room", updateRoom,
-                    "list_rooms", getAllRooms,
-                    "show_schedule", getWholeSchedule,
-                    "import_rooms", importRooms,
-                    "import_schedule", importSchedule,
-                    "search_schedule", searchSchedule
-            );
+
+    private Handle exportScheduleJSON = inputScanner -> {
+
+    };
+
+    private Map<String, Handle> handlesMap;
+
+    public InstructionHandles(ScheduleManager scheduleManager) {
+        this.scheduleManager = scheduleManager;
+        handlesMap = new HashMap<>();
+        handlesMap.put("schedule_slot", scheduleTimeSlot);
+        handlesMap.put("move_slot", moveSlot);
+        handlesMap.put("add_room", addRoom);
+        handlesMap.put("remove_room", removeRoom);
+        handlesMap.put("edit_room", updateRoom);
+        handlesMap.put("list_rooms", getAllRooms);
+        handlesMap.put("show_schedule", getWholeSchedule);
+        handlesMap.put("import_rooms", importRooms);
+        handlesMap.put("import_schedule", importSchedule);
+        handlesMap.put("search_schedule", searchSchedule);
+        handlesMap.put("exportScheduleJSON", exportScheduleJSON);
+
+    }
 
 
     public Handle getHandle(String instruction) {
