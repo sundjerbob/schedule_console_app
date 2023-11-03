@@ -7,7 +7,9 @@ import raf.sk_schedule.filter.SearchCriteria;
 import raf.sk_schedule.model.RoomProperties;
 import raf.sk_schedule.model.ScheduleSlot;
 
+import javax.sound.midi.Soundbank;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.*;
 
@@ -133,6 +135,8 @@ public class InstructionHandles {
     };
 
     private Handle moveSlot = inputScanner -> {
+        System.out.println("Enter date in format \"yyyy-mm-dd\" (\"2023-10-23\") or day of the week on witch the slot is scheduled currently: ");
+
 
     };
 
@@ -241,8 +245,6 @@ public class InstructionHandles {
 
             roomBuilder.addExtra(line, inputScanner.nextLine().trim());
         }
-
-
     };
 
     private Handle importRooms = inputScanner -> {
@@ -303,17 +305,56 @@ public class InstructionHandles {
     };
 
 
-    private Handle searchSchedule = inputScanner -> {
+    private Handle filterSchedule = inputScanner -> {
 
         SearchCriteria.Builder searchBuilder = new SearchCriteria.Builder();
+
         while (true) {
-            System.out.println("Enter name of the attribute you want to apply search to  \"done\" if you want to finish configuring search parameters: ");
+            System.out.println("Enter name of the attribute you want to apply filter for, or type \"done\" if you want to finish configuring search parameters:");
             String line = inputScanner.nextLine().trim();
 
             if (line.isEmpty())
                 continue;
 
-            if (line.equalsIgnoreCase("done"))
+            if (line.trim().equalsIgnoreCase("done"))
+                break;
+
+            System.out.println("Enter value for attribute named \"" + line + "\" :");
+
+            searchBuilder.setCriteria(line, inputScanner.nextLine().trim());
+        }
+    };
+
+    private Handle exportScheduleJSON = inputScanner -> {
+
+        System.out.println("Enter the path you want to export schedule to:");
+        String filePath = inputScanner.nextLine().trim();
+        System.out.println("Enter the starting date for schedule export. So the slots that start on that date and after will be exported:");
+        String startingDate = inputScanner.nextLine().trim();
+        System.out.println("Enter the last date for schedule export. So the slots that before that date including the date itself will be exported:");
+        String endingDate = inputScanner.nextLine();
+        System.out.println(
+                scheduleManager.exportScheduleJSON(filePath, startingDate.isBlank() ? endingDate : null, endingDate.isBlank() ? endingDate : null)
+                        + " object exported file on path: " + filePath + " !");
+    };
+    private Handle exportFilteredScheudleJSON = inputScanner -> {
+        System.out.println("Enter the path you want to export schedule to:");
+        String filePath = inputScanner.nextLine().trim();
+        System.out.println("Enter the starting date for schedule export. So the slots that start on that date and after will be exported:");
+        String startingDate = inputScanner.nextLine().trim();
+        System.out.println("Enter the last date for schedule export. So the slots that before that date including the date itself will be exported:");
+        String endingDate = inputScanner.nextLine();
+
+        SearchCriteria.Builder searchBuilder = new SearchCriteria.Builder();
+
+        while (true) {
+            System.out.println("Enter name of the attribute you want to apply filter for, or type \"done\" if you want to finish configuring search parameters:");
+            String line = inputScanner.nextLine().trim();
+
+            if (line.isEmpty())
+                continue;
+
+            if (line.trim().equalsIgnoreCase("done"))
                 break;
 
             System.out.println("Enter value for attribute named \"" + line + "\" :");
@@ -321,17 +362,62 @@ public class InstructionHandles {
             searchBuilder.setCriteria(line, inputScanner.nextLine().trim());
         }
 
+        System.out.println(
+                scheduleManager.exportFilteredScheduleJSON(filePath, searchBuilder.build(), startingDate.isBlank() ? endingDate : null, endingDate.isBlank() ? endingDate : null)
+                        + " object exported file on path: " + filePath + " !");
     };
 
-    private Handle exportScheduleJSON = inputScanner -> {
 
+    private Handle exportScheduleCSV = inputScanner -> {
+        System.out.println("Enter the path you want to export schedule to:");
+        String filePath = inputScanner.nextLine().trim();
+        System.out.println("Enter the starting date for schedule export. So the slots that start on that date and after will be exported:");
+        String startingDate = inputScanner.nextLine().trim();
+        System.out.println("Enter the last date for schedule export. So the slots that before that date including the date itself will be exported:");
+        String endingDate = inputScanner.nextLine();
+        System.out.println(
+                scheduleManager.exportScheduleCSV(filePath, startingDate.isBlank() ? endingDate : null, endingDate.isBlank() ? endingDate : null)
+                        + " object exported file on path: " + filePath + " !");
+    };
+    private Handle exportFilteredScheduleCSV = inputScanner -> {
+        System.out.println("Enter the path you want to export schedule to:");
+        String filePath = inputScanner.nextLine().trim();
+        System.out.println("Enter the starting date for schedule export. So the slots that start on that date and after will be exported:");
+        String startingDate = inputScanner.nextLine().trim();
+        System.out.println("Enter the last date for schedule export. So the slots that before that date including the date itself will be exported:");
+        String endingDate = inputScanner.nextLine();
+
+        SearchCriteria.Builder searchBuilder = new SearchCriteria.Builder();
+
+        while (true) {
+            System.out.println("Enter name of the attribute you want to apply filter for, or type \"done\" if you want to finish configuring search parameters:");
+            String line = inputScanner.nextLine().trim();
+
+            if (line.isEmpty())
+                continue;
+
+            if (line.trim().equalsIgnoreCase("done"))
+                break;
+
+            System.out.println("Enter value for attribute named \"" + line + "\" :");
+
+            searchBuilder.setCriteria(line, inputScanner.nextLine().trim());
+        }
+
+        System.out.println(
+                scheduleManager.exportFilteredScheduleCSV(filePath, searchBuilder.build(), startingDate.isBlank() ? endingDate : null, endingDate.isBlank() ? endingDate : null)
+                        + " object exported file on path: " + filePath + " !");
     };
 
     private Map<String, Handle> handlesMap;
 
     public InstructionHandles(ScheduleManager scheduleManager) {
+
+        //my schedule component
         this.scheduleManager = scheduleManager;
+
         handlesMap = new HashMap<>();
+
         handlesMap.put("schedule_slot", scheduleTimeSlot);
         handlesMap.put("move_slot", moveSlot);
         handlesMap.put("add_room", addRoom);
@@ -341,8 +427,11 @@ public class InstructionHandles {
         handlesMap.put("show_schedule", getWholeSchedule);
         handlesMap.put("import_rooms", importRooms);
         handlesMap.put("import_schedule", importSchedule);
-        handlesMap.put("search_schedule", searchSchedule);
-        handlesMap.put("exportScheduleJSON", exportScheduleJSON);
+        handlesMap.put("filter_schedule", filterSchedule);
+        handlesMap.put("export_schedule_json", exportScheduleJSON);
+        handlesMap.put("export_filtered_schedule_json", exportFilteredScheudleJSON);
+        handlesMap.put("export_schedule_csv", exportScheduleCSV);
+        handlesMap.put("export_filtered_schedule_scv", exportFilteredScheduleCSV);
 
     }
 
