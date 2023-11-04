@@ -1,14 +1,7 @@
 package raf.sk_schedule.controller;
 
 import raf.sk_schedule.api.ScheduleManager;
-import raf.sk_schedule.model.RoomProperties;
-import raf.sk_schedule.model.ScheduleSlot;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
 import java.util.Scanner;
 
 
@@ -18,7 +11,6 @@ public class ScheduleController {
 
     Scanner inputScanner;
 
-    final String help;
 
     final String helpFilePath = "src/main/java/raf/sk_schedule/toolkit/help.txt";
 
@@ -27,25 +19,21 @@ public class ScheduleController {
         this.inputScanner = new Scanner(System.in);
 
 
-        try {
-            help = Files.readString(Path.of(helpFilePath), StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            throw new RuntimeException("Help document not found!");
-        }
+
 
     }
 
-    public boolean actionScheduler() {
+
+    public boolean instructionScheduler() {
 
         String command = inputScanner.nextLine().trim().toLowerCase();
 
 
-        if ("schedule_close".equalsIgnoreCase(command)) {
+        if ("exit".equalsIgnoreCase(command)) {
             System.out.println("Closing the program.");
+            inputScanner.close();
             return false;
         }
-        if ("--help".equalsIgnoreCase(command) || "-h".equalsIgnoreCase(command))
-            System.out.println(help);
 
         InstructionHandles.Handle handle = instructionHandles.getHandle(command);
 

@@ -2,8 +2,6 @@ package raf.sk_schedule.cofig;
 
 import raf.sk_schedule.api.ScheduleManager;
 import raf.sk_schedule.engine.ScheduleAppEngine;
-import raf.sk_schedule.util.ScheduleMapper;
-
 import java.lang.reflect.InvocationTargetException;
 
 public class AppConfig {
@@ -25,7 +23,7 @@ public class AppConfig {
 
         // another useless check
         if (!(scheduleManager instanceof ScheduleManager))
-            throw new RuntimeException("Smt went wrong in dependency class configuration... (x),(x)");
+            throw new RuntimeException("Smt went wrong in schedule component dependency class configuration... (x),(x)");
 
         return appEngine = new ScheduleAppEngine((ScheduleManager) scheduleManager);
     }

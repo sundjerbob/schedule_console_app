@@ -1,0 +1,64 @@
+
+-----------------------------------------------------------*
+List of functions you can use in this console app, incoming
+-----------------------------------------------------------*
+instruction_execution_keyword
+    Short description:
+     A little bit longer description
+
+schedule_slot
+    Schedule a time slot:
+    This instruction allows you to schedule a time slot. You can specify the date, starting time, duration, room, and additional attributes for the slot. You can schedule a single slot on a specific date or recurring slots on a specific day of the week within a date range.
+
+move_slot
+    Move a scheduled slot:
+    This instruction is used to move a scheduled time slot from one date or day of the week to another. It allows you to reschedule a slot to a different date or day.
+
+add_room
+    Add a new room:
+    Use this instruction to add a new room to the schedule. You can specify the room's name, capacity, and other attributes.
+
+remove_room
+    Remove a room:
+    This instruction allows you to remove a room from the schedule by specifying its name. Be cautious when removing rooms as it will also remove all associated time slots.
+
+edit_room
+    Edit room details:
+    You can modify the details of an existing room using this instruction. Change the name, capacity, or other attributes of a room.
+
+list_rooms
+    List all rooms:
+    Use this instruction to display a list of all rooms currently available in the schedule.
+
+show_schedule
+    Show the entire schedule:
+    This instruction displays the entire schedule, showing all scheduled time slots in the system.
+
+import_rooms
+    Import room information from a CSV file:
+    Import room properties from a CSV file to add or update room information in the schedule.
+
+import_schedule
+    Import schedule data from a CSV file:
+    Import time slot data from a CSV file to add or update scheduled slots in the system.
+
+filter_schedule
+    Filter and search the schedule:
+    You can filter the schedule by specifying attributes and their values. The system will display the time slots that match the provided criteria.
+
+export_schedule_json
+    Export the entire schedule to a JSON file:
+    Export the entire schedule to a JSON file, including all time slots and room information. You can specify a date range for the export.
+
+export_filtered_schedule_json
+    Export filtered schedule to a JSON file:
+    Export a filtered schedule to a JSON file. You can specify criteria to filter the schedule and a date range for the export.
+
+export_schedule_csv
+    Export the entire schedule to a CSV file:
+    Export the entire schedule to a CSV file, including all time slots and room information. You can specify a date range for the export.
+
+export_filtered_schedule_csv
+    Export filtered schedule to a CSV file:
+    Export a filtered schedule to a CSV file. You can specify criteria to filter the schedule and a date range for the export.
+ -----------------------------------------------------------*

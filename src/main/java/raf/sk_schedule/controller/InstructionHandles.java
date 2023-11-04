@@ -7,23 +7,28 @@ import raf.sk_schedule.filter.SearchCriteria;
 import raf.sk_schedule.model.RoomProperties;
 import raf.sk_schedule.model.ScheduleSlot;
 
-import javax.sound.midi.Soundbank;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.*;
 
 public class InstructionHandles {
 
+    private static final String helpFilePath = "src/main/resources/help.txt";
+
+    private String helpPrompt;
 
     private ScheduleManager scheduleManager;
-
-
+    final Map<String, Handle> handlesMap;
     public interface Handle {
         void handle(Scanner inputScanner);
     }
 
-    Handle scheduleTimeSlot = inputScanner -> {
+    final Handle help = inputScanner -> System.out.println(helpPrompt);
+
+    final Handle scheduleTimeSlot = inputScanner -> {
         ScheduleSlot.Builder slotBuilder = new ScheduleSlot.Builder();
 
         System.out.println("Enter date in format \"yyyy-mm-dd\" (\"2023-10-23\") or day of the week on witch the slot will be scheduled on : ");
@@ -134,14 +139,14 @@ public class InstructionHandles {
         }
     };
 
-    private Handle moveSlot = inputScanner -> {
+    final Handle moveSlot = inputScanner -> {
         System.out.println("Enter date in format \"yyyy-mm-dd\" (\"2023-10-23\") or day of the week on witch the slot is scheduled currently: ");
 
 
     };
 
 
-    private Handle addRoom = inputScanner -> {
+    final Handle addRoom = inputScanner -> {
         RoomProperties.Builder roomBuilder = new RoomProperties.Builder();
 
         System.out.println("Enter the room name: ");
@@ -189,7 +194,7 @@ public class InstructionHandles {
 
     };
 
-    private Handle removeRoom = inputScanner -> {
+    final Handle removeRoom = inputScanner -> {
         System.out.println("Enter the name of the room you want to be removed: ");
         String roomName = inputScanner.nextLine();
         try {
@@ -200,7 +205,7 @@ public class InstructionHandles {
         System.out.println("Room " + roomName + " has been removed!");
     };
 
-    private Handle updateRoom = inputScanner -> {
+    final Handle updateRoom = inputScanner -> {
 
         System.out.println("Enter the name of the room you want to modify: ");
         String roomName = inputScanner.nextLine().trim();
@@ -247,7 +252,7 @@ public class InstructionHandles {
         }
     };
 
-    private Handle importRooms = inputScanner -> {
+    final Handle importRooms = inputScanner -> {
         System.out.println("Type in the path to csv file to import roomProperties:");
         String fileName = inputScanner.nextLine().trim();
 
@@ -263,7 +268,7 @@ public class InstructionHandles {
 
     };
 
-    private Handle importSchedule = inputScanner -> {
+    final Handle importSchedule = inputScanner -> {
         if (scheduleManager.getAllRooms().isEmpty()) {
             System.out.println("You currently don't have any rooms in witch you could schedule slots, you need to import rooms first. ");
             return;
@@ -285,7 +290,7 @@ public class InstructionHandles {
     };
 
 
-    private Handle getWholeSchedule = inputScanner -> {
+    final Handle getWholeSchedule = inputScanner -> {
 
         List<ScheduleSlot> schedule = scheduleManager.getWholeSchedule();
         if (schedule.isEmpty())
@@ -295,7 +300,7 @@ public class InstructionHandles {
         }
     };
 
-    private Handle getAllRooms = inputScanner -> {
+    final Handle getAllRooms = inputScanner -> {
         List<RoomProperties> rooms = scheduleManager.getAllRooms();
         if (rooms.isEmpty())
             System.out.println("There is no rooms in schedule.");
@@ -305,7 +310,7 @@ public class InstructionHandles {
     };
 
 
-    private Handle filterSchedule = inputScanner -> {
+    final Handle filterSchedule = inputScanner -> {
 
         SearchCriteria.Builder searchBuilder = new SearchCriteria.Builder();
 
@@ -325,7 +330,7 @@ public class InstructionHandles {
         }
     };
 
-    private Handle exportScheduleJSON = inputScanner -> {
+    final Handle exportScheduleJSON = inputScanner -> {
 
         System.out.println("Enter the path you want to export schedule to:");
         String filePath = inputScanner.nextLine().trim();
@@ -337,7 +342,7 @@ public class InstructionHandles {
                 scheduleManager.exportScheduleJSON(filePath, startingDate.isBlank() ? endingDate : null, endingDate.isBlank() ? endingDate : null)
                         + " object exported file on path: " + filePath + " !");
     };
-    private Handle exportFilteredScheudleJSON = inputScanner -> {
+    final Handle exportFilteredScheudleJSON = inputScanner -> {
         System.out.println("Enter the path you want to export schedule to:");
         String filePath = inputScanner.nextLine().trim();
         System.out.println("Enter the starting date for schedule export. So the slots that start on that date and after will be exported:");
@@ -368,7 +373,7 @@ public class InstructionHandles {
     };
 
 
-    private Handle exportScheduleCSV = inputScanner -> {
+    final Handle exportScheduleCSV = inputScanner -> {
         System.out.println("Enter the path you want to export schedule to:");
         String filePath = inputScanner.nextLine().trim();
         System.out.println("Enter the starting date for schedule export. So the slots that start on that date and after will be exported:");
@@ -379,7 +384,7 @@ public class InstructionHandles {
                 scheduleManager.exportScheduleCSV(filePath, startingDate.isBlank() ? endingDate : null, endingDate.isBlank() ? endingDate : null)
                         + " object exported file on path: " + filePath + " !");
     };
-    private Handle exportFilteredScheduleCSV = inputScanner -> {
+    final Handle exportFilteredScheduleCSV = inputScanner -> {
         System.out.println("Enter the path you want to export schedule to:");
         String filePath = inputScanner.nextLine().trim();
         System.out.println("Enter the starting date for schedule export. So the slots that start on that date and after will be exported:");
@@ -409,15 +414,23 @@ public class InstructionHandles {
                         + " object exported file on path: " + filePath + " !");
     };
 
-    private Map<String, Handle> handlesMap;
 
-    public InstructionHandles(ScheduleManager scheduleManager) {
+    InstructionHandles(ScheduleManager scheduleManager) {
 
         //my schedule component
         this.scheduleManager = scheduleManager;
 
         handlesMap = new HashMap<>();
 
+
+        try {
+            helpPrompt = Files.readString(Path.of(helpFilePath), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new RuntimeException("Help app documentation file not found!");
+        }
+
+        handlesMap.put("-h", help);
+        handlesMap.put("--help", help);
         handlesMap.put("schedule_slot", scheduleTimeSlot);
         handlesMap.put("move_slot", moveSlot);
         handlesMap.put("add_room", addRoom);
@@ -432,7 +445,6 @@ public class InstructionHandles {
         handlesMap.put("export_filtered_schedule_json", exportFilteredScheudleJSON);
         handlesMap.put("export_schedule_csv", exportScheduleCSV);
         handlesMap.put("export_filtered_schedule_scv", exportFilteredScheduleCSV);
-
     }
 
 

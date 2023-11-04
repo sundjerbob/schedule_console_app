@@ -20,7 +20,6 @@ public class ScheduleAppEngine extends Thread {
 
         ScheduleController controller = new ScheduleController(scheduleManager);
 
-
         System.out.println
                 (
                         "------------------------------------------------------------------------\n"
@@ -41,17 +40,16 @@ public class ScheduleAppEngine extends Thread {
 
         System.out.println("Your schedule is initialized, starting from " + firstDate + " and ending at " + lastDate);
 
-
         try {
             do {
                 System.out.println("Type 'schedule_close' to exit, -h or --help to list all the commands you can use.\nEnter commands:");
+            }
+            while (controller.instructionScheduler());
 
-            } while (controller.actionScheduler());
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
     }
-
 
 }
 
