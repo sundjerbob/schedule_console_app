@@ -1,10 +1,8 @@
 package raf.sk_schedule;
 
-import raf.sk_schedule.cofig.AppConfig;
-import raf.sk_schedule.engine.ScheduleAppEngine;
+import raf.sk_schedule.config.AppConfig;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.Objects;
 
 public class Main {
     public static void main(String[] args) {

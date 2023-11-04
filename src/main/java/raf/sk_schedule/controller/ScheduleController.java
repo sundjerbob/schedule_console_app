@@ -1,6 +1,7 @@
 package raf.sk_schedule.controller;
 
 import raf.sk_schedule.api.ScheduleManager;
+import raf.sk_schedule.instructions.InstructionHandles;
 
 import java.util.Scanner;
 
@@ -19,8 +20,6 @@ public class ScheduleController {
         this.inputScanner = new Scanner(System.in);
 
 
-
-
     }
 
 
@@ -29,7 +28,7 @@ public class ScheduleController {
         String command = inputScanner.nextLine().trim().toLowerCase();
 
 
-        if ("exit".equalsIgnoreCase(command)) {
+        if ("exit".equals(command)) {
             System.out.println("Closing the program.");
             inputScanner.close();
             return false;
@@ -38,7 +37,7 @@ public class ScheduleController {
         InstructionHandles.Handle handle = instructionHandles.getHandle(command);
 
         if (handle == null)
-            System.out.println(command + " is unsupported command. Type --help or -h to see all of the supported command you can use.");
+            System.out.println("\"" + command + "\" is unsupported command. Type --help or -h to see all of the supported command you can use.");
 
         else
             handle.handle(inputScanner);
@@ -46,6 +45,5 @@ public class ScheduleController {
         return true;
 
     }
-
 
 }

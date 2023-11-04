@@ -1,4 +1,4 @@
-package raf.sk_schedule.controller;
+package raf.sk_schedule.instructions;
 
 import raf.sk_schedule.api.ScheduleManager;
 import raf.sk_schedule.exception.ScheduleException;
@@ -415,7 +415,7 @@ public class InstructionHandles {
     };
 
 
-    InstructionHandles(ScheduleManager scheduleManager) {
+    public InstructionHandles(ScheduleManager scheduleManager) {
 
         //my schedule component
         this.scheduleManager = scheduleManager;

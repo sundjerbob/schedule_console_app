@@ -22,8 +22,9 @@ public class ScheduleAppEngine extends Thread {
 
         System.out.println
                 (
-                        "------------------------------------------------------------------------\n"
+                        "-----------------------------------------------------------------------------------------------\n"
                                 + "Hello from " + scheduleManager.getClass().getSimpleName() + "!\n"
+                                + "-----------------------------------------------------------------------------------------------\n"
                                 + "First you need to configure schedule component...\n"
                                 + "Enter the date in format yyyy-mm-dd \"2023-10-14\", from witch the schedule will start:"
                 );
@@ -42,7 +43,11 @@ public class ScheduleAppEngine extends Thread {
 
         try {
             do {
-                System.out.println("Type 'schedule_close' to exit, -h or --help to list all the commands you can use.\nEnter commands:");
+                System.out.println(
+                        """    
+                                -----------------------------------------------------------------------------------------------
+                                Type "exit" to close application, or type: -h or --help to list all the commands you can use.
+                                Enter commands:""");
             }
             while (controller.instructionScheduler());
 

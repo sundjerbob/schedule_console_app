@@ -1,4 +1,4 @@
-package raf.sk_schedule.cofig;
+package raf.sk_schedule.config;
 
 import raf.sk_schedule.api.ScheduleManager;
 import raf.sk_schedule.engine.ScheduleAppEngine;
