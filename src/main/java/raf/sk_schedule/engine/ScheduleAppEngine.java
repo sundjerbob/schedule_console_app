@@ -44,7 +44,7 @@ public class ScheduleAppEngine extends Thread {
         try {
             do {
                 System.out.println(
-                        """    
+                        """  
                                 -----------------------------------------------------------------------------------------------
                                 Type "exit" to close application, or type: -h or --help to list all the commands you can use.
                                 Enter commands:""");

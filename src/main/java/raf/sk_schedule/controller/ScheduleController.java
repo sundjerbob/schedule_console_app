@@ -12,21 +12,17 @@ public class ScheduleController {
 
     Scanner inputScanner;
 
-
     final String helpFilePath = "src/main/java/raf/sk_schedule/toolkit/help.txt";
 
     public ScheduleController(ScheduleManager scheduleManager) {
         instructionHandles = new InstructionHandles(scheduleManager);
         this.inputScanner = new Scanner(System.in);
-
-
     }
 
 
     public boolean instructionScheduler() {
 
         String command = inputScanner.nextLine().trim().toLowerCase();
-
 
         if ("exit".equals(command)) {
             System.out.println("Closing the program.");

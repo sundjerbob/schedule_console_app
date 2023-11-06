@@ -22,6 +22,7 @@ public class InstructionHandles {
 
     private ScheduleManager scheduleManager;
     final Map<String, Handle> handlesMap;
+
     public interface Handle {
         void handle(Scanner inputScanner);
     }
@@ -330,6 +331,7 @@ public class InstructionHandles {
         }
     };
 
+
     final Handle exportScheduleJSON = inputScanner -> {
 
         System.out.println("Enter the path you want to export schedule to:");
@@ -338,11 +340,18 @@ public class InstructionHandles {
         String startingDate = inputScanner.nextLine().trim();
         System.out.println("Enter the last date for schedule export. So the slots that before that date including the date itself will be exported:");
         String endingDate = inputScanner.nextLine();
-        System.out.println(
-                scheduleManager.exportScheduleJSON(filePath, startingDate.isBlank() ? endingDate : null, endingDate.isBlank() ? endingDate : null)
-                        + " object exported file on path: " + filePath + " !");
+        try {
+            System.out.println(
+                    scheduleManager.exportScheduleJSON(filePath, startingDate.isBlank() ? endingDate : null, endingDate.isBlank() ? endingDate : null)
+                            + " object exported file on path: " + filePath + " !");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     };
-    final Handle exportFilteredScheudleJSON = inputScanner -> {
+
+
+    final Handle exportFilteredScheduleJSON = inputScanner -> {
         System.out.println("Enter the path you want to export schedule to:");
         String filePath = inputScanner.nextLine().trim();
         System.out.println("Enter the starting date for schedule export. So the slots that start on that date and after will be exported:");
@@ -384,6 +393,8 @@ public class InstructionHandles {
                 scheduleManager.exportScheduleCSV(filePath, startingDate.isBlank() ? endingDate : null, endingDate.isBlank() ? endingDate : null)
                         + " object exported file on path: " + filePath + " !");
     };
+
+
     final Handle exportFilteredScheduleCSV = inputScanner -> {
         System.out.println("Enter the path you want to export schedule to:");
         String filePath = inputScanner.nextLine().trim();
@@ -438,11 +449,16 @@ public class InstructionHandles {
         handlesMap.put("edit_room", updateRoom);
         handlesMap.put("list_rooms", getAllRooms);
         handlesMap.put("show_schedule", getWholeSchedule);
+        handlesMap.put("filter_schedule", filterSchedule);
+        /*
+        handleMap.put("is_free", isSlotFree);
+        handleMap.put("show_free_schedule", getFreeSchedule);
+        handleMap.put("filter_free_schedule", filterFreeSchedule);
+        */
         handlesMap.put("import_rooms", importRooms);
         handlesMap.put("import_schedule", importSchedule);
-        handlesMap.put("filter_schedule", filterSchedule);
         handlesMap.put("export_schedule_json", exportScheduleJSON);
-        handlesMap.put("export_filtered_schedule_json", exportFilteredScheudleJSON);
+        handlesMap.put("export_filtered_schedule_json", exportFilteredScheduleJSON);
         handlesMap.put("export_schedule_csv", exportScheduleCSV);
         handlesMap.put("export_filtered_schedule_scv", exportFilteredScheduleCSV);
     }
