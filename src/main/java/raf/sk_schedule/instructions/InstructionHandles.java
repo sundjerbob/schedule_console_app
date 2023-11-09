@@ -270,6 +270,7 @@ public class InstructionHandles {
     };
 
     final Handle importSchedule = inputScanner -> {
+
         if (scheduleManager.getAllRooms().isEmpty()) {
             System.out.println("You currently don't have any rooms in witch you could schedule slots, you need to import rooms first. ");
             return;
@@ -339,10 +340,10 @@ public class InstructionHandles {
         System.out.println("Enter the starting date for schedule export. So the slots that start on that date and after will be exported:");
         String startingDate = inputScanner.nextLine().trim();
         System.out.println("Enter the last date for schedule export. So the slots that before that date including the date itself will be exported:");
-        String endingDate = inputScanner.nextLine();
+        String endingDate = inputScanner.nextLine().trim();
         try {
             System.out.println(
-                    scheduleManager.exportScheduleJSON(filePath, startingDate.isBlank() ? endingDate : null, endingDate.isBlank() ? endingDate : null)
+                    scheduleManager.exportScheduleJSON(filePath, !startingDate.isBlank() ? startingDate : null, !endingDate.isBlank() ? endingDate : null)
                             + " object exported file on path: " + filePath + " !");
 
         } catch (Exception e) {

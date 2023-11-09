@@ -39,7 +39,7 @@ public class ScheduleAppEngine extends Thread {
 
         scheduleManager.initialize(firstDate, lastDate);
 
-        System.out.println("Your schedule is initialized, starting from " + firstDate + " and ending at " + lastDate);
+        System.out.println("Your schedule is initialized, starting from " + firstDate + " and ending at " + lastDate + "!");
 
         try {
             do {

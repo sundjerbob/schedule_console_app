@@ -2,6 +2,7 @@ package raf.sk_schedule.config;
 
 import raf.sk_schedule.api.ScheduleManager;
 import raf.sk_schedule.engine.ScheduleAppEngine;
+
 import java.lang.reflect.InvocationTargetException;
 
 public class AppConfig {
@@ -10,7 +11,7 @@ public class AppConfig {
 
     public static ScheduleAppEngine initScheduleAppClient(String classPath) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException, ClassNotFoundException {
 
-        if(appEngine != null && appEngine.isAlive())
+        if (appEngine != null && appEngine.isAlive())
             return null;
 
         Class<?> scheduleManagerImplementationClass = Class.forName(classPath);
@@ -24,6 +25,7 @@ public class AppConfig {
         // another useless check
         if (!(scheduleManager instanceof ScheduleManager))
             throw new RuntimeException("Smt went wrong in schedule component dependency class configuration... (x),(x)");
+
 
         return appEngine = new ScheduleAppEngine((ScheduleManager) scheduleManager);
     }
