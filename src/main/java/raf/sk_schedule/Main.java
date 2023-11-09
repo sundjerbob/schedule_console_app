@@ -15,7 +15,7 @@ public class Main {
         try {
 
             Objects.requireNonNull(
-                            AppConfig.initScheduleAppClient("raf.sk_schedule.ScheduleSlotsManager"))
+                            AppConfig.initScheduleAppClient(args[0]))
                     .start();
 
 
