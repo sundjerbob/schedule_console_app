@@ -452,6 +452,7 @@ public class InstructionHandles {
         handlesMap.put("show_schedule", getWholeSchedule);
         handlesMap.put("filter_schedule", filterSchedule);
         /*
+
         handleMap.put("is_free", isSlotFree);
         handleMap.put("show_free_schedule", getFreeSchedule);
         handleMap.put("filter_free_schedule", filterFreeSchedule);
