@@ -29,6 +29,6 @@ public class ScheduleAppConfig {
             throw new RuntimeException("Smt went wrong in schedule component dependency class configuration... (X),(x)' ");
 
         scheduleManager = (ScheduleManager) scheduleManagerImplementation;
-        return appEngine = new ScheduleAppEngine(scheduleManager);
+        return appEngine = new ScheduleAppEngine();
     }
 }

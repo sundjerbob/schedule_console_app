@@ -1,18 +1,9 @@
 package raf.sk_schedule.engine;
 
-import raf.sk_schedule.api.ScheduleManager;
 import raf.sk_schedule.controller.ScheduleAppController;
-
-import java.util.Scanner;
 
 
 public class ScheduleAppEngine extends Thread {
-    private final ScheduleManager scheduleManager;
-
-    public ScheduleAppEngine(ScheduleManager scheduleManager) {
-        this.scheduleManager = scheduleManager;
-
-    }
 
 
     @Override
@@ -20,7 +11,7 @@ public class ScheduleAppEngine extends Thread {
 
         ScheduleAppController controller = new ScheduleAppController().init();
 
-        if(controller != null) {
+        if (controller != null) {
             do {
                 System.out.println(
                         """  
