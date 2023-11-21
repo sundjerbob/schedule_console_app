@@ -5,9 +5,11 @@ import raf.sk_schedule.engine.ScheduleAppEngine;
 
 import java.lang.reflect.InvocationTargetException;
 
-public class AppConfig {
+public class ScheduleAppConfig {
 
     private static ScheduleAppEngine appEngine;
+
+    public static ScheduleManager scheduleManager;
 
     public static ScheduleAppEngine initScheduleAppClient(String classPath) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException, ClassNotFoundException {
 
@@ -17,16 +19,16 @@ public class AppConfig {
         Class<?> scheduleManagerImplementationClass = Class.forName(classPath);
 
         // useless check in case we got some random clas as scheduleManagerImplementationClass
-        if (!scheduleManagerImplementationClass.getSuperclass().isAssignableFrom(ScheduleManager.class))
+        if (!ScheduleManager.class.isAssignableFrom(scheduleManagerImplementationClass))
             throw new RuntimeException("Select the class that implements ScheduleManager interface from ");
 
-        Object scheduleManager = scheduleManagerImplementationClass.getDeclaredConstructor().newInstance();
+        Object scheduleManagerImplementation = scheduleManagerImplementationClass.getDeclaredConstructor().newInstance();
 
         // another useless check
-        if (!(scheduleManager instanceof ScheduleManager))
-            throw new RuntimeException("Smt went wrong in schedule component dependency class configuration... (x),(x)");
+        if (!(scheduleManagerImplementation instanceof ScheduleManager))
+            throw new RuntimeException("Smt went wrong in schedule component dependency class configuration... (X),(x)' ");
 
-
-        return appEngine = new ScheduleAppEngine((ScheduleManager) scheduleManager);
+        scheduleManager = (ScheduleManager) scheduleManagerImplementation;
+        return appEngine = new ScheduleAppEngine(scheduleManager);
     }
 }
