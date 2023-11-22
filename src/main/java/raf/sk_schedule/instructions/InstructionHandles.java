@@ -1,8 +1,9 @@
 package raf.sk_schedule.instructions;
 
+import raf.sk_schedule.api.Constants;
 import raf.sk_schedule.engine.InputScanner;
-import raf.sk_schedule.exception.ScheduleException;
 import raf.sk_schedule.model.location_node.RoomProperties;
+import raf.sk_schedule.model.schedule_mapper.RepetitiveScheduleMapper;
 import raf.sk_schedule.model.schedule_node.ScheduleSlot;
 import raf.sk_schedule.util.filter.SearchCriteria;
 
@@ -38,14 +39,38 @@ public class InstructionHandles {
         String scheduleOn = inputScanner.nextLine().trim();
 
         if (!scheduleOn.matches("\\d{4}-\\d{2}-\\d{2}")) {
-            //TODO: todo
-            /*System.out.println("Enter Enter date in format \"yyyy-mm-dd\" (\"2023-10-23\"), starting from witch slot will be scheduled on every " + scheduleOn.toLowerCase() + " :");
-            System.out.println("Enter Enter date in format \"yyyy-mm-dd\" (\"2023-10-23\"), slot will be scheduled on every "
-                    + scheduleOn.toLowerCase() + " starting from " + /* +s/ " until date: ");
-            System.out.println("Slot will be scheduled every " + scheduleOn.toLowerCase() + " starting from date " + startingDate + " until date " + endingDate + ".");
-            System.out.println("Enter starting time in format \"HH:mm\" (\"12:25\") : ");
-            System.out.println("Enter a duration in minutes (whole number), or ending time in format \"HH:mm\" (\"12:25\") :");
-            */
+            System.out.println("Enter Enter date in format \"yyyy-mm-dd\" (\"2023-10-23\"), starting from witch slot will be scheduled on every " + scheduleOn.toLowerCase() + " :");
+            String lowerBoundDate = inputScanner.nextLine().trim();
+
+            System.out.println("Enter Enter date in format \"yyyy-mm-dd\" (\"2023-10-23\") and the slot will be scheduled on every "
+                    + scheduleOn.toLowerCase() + " starting from " + " until date: ");
+            String upperBoundDate = inputScanner.nextLine();
+
+            System.out.println("Slot will be scheduled every " + scheduleOn.toLowerCase() + " starting from date "
+                    + lowerBoundDate + " until date " + upperBoundDate + ".");
+
+            System.out.println("Enter slots starting time in format \"HH:mm\" (\"12:25\") : ");
+            String startTime = inputScanner.nextLine();
+
+            System.out.println("Enter slots duration in minutes (whole number), or ending time in format \"HH:mm\" (\"12:25\") :");
+            String durOrEnd = inputScanner.nextLine().trim();
+
+            RepetitiveScheduleMapper.Builder scheduleMapper = new RepetitiveScheduleMapper.Builder()
+                    .setWeekDay(Enum.valueOf(Constants.WeekDay.class, scheduleOn))
+                    .setRecurrencePeriod(7)
+                    .setStartTime(startTime);
+            if (durOrEnd.matches("\\d+"))
+                scheduleMapper.setDuration(Integer.parseInt(durOrEnd));
+            else if (durOrEnd.matches("\\d{2}:\\d{2}"))
+                scheduleMapper.setEndTime(durOrEnd);
+
+            List<ScheduleSlot> bookedSlots = scheduleManager.bookRepetitiveScheduleSlot(scheduleMapper.build());
+            StringBuilder message = new StringBuilder("The slots that have been booked:\n");
+            for (ScheduleSlot booked : bookedSlots) {
+                message.append(booked.toString()).append('\n');
+            }
+            System.out.println(message);
+            return;
         } else {
 
             slotBuilder.setDate(parseDate(scheduleOn));
@@ -64,7 +89,7 @@ public class InstructionHandles {
 
         System.out.println("Enter name of the room where you want to schedule the time slot: ");
         RoomProperties room;
-        while ((room = scheduleManager.getRoom(inputScanner.nextLine().trim())) == null) {
+        while ((room = scheduleManager.getRoomByName(inputScanner.nextLine().trim())) == null) {
             System.out.println("There is no room with that name! Please choose existing rooms name.");
         }
         slotBuilder.setLocation(room);
@@ -83,7 +108,7 @@ public class InstructionHandles {
 
         // ************** adding the slot to schedule ************** //
         ScheduleSlot slot = slotBuilder.build();
-        scheduleManager.scheduleTimeSlot(slot);
+        scheduleManager.bookScheduleSlot(slot);
         // ********************************************************* //
 
 
@@ -94,8 +119,31 @@ public class InstructionHandles {
     };
 
     final Handle moveSlot = inputScanner -> {
-        System.out.println("Enter date in format \"yyyy-mm-dd\" (\"2023-10-23\") or day of the week on witch the slot is scheduled currently: ");
-
+        System.out.println("Enter date in format \"yyyy-mm-dd\" (\"2023-10-23\") on witch the slot is scheduled: ");
+        String date = inputScanner.nextLine().trim();
+        System.out.println("Enter the starting time of the slot in format \"HH:mm\" (\"12:25\") :");
+        String startTime = inputScanner.nextLine().trim();
+        System.out.println("Enter slots ending time in format \"HH:mm\" (\"12:25\") :");
+        String endTime = inputScanner.nextLine().trim();
+        System.out.println("Enter a name of the room the slot is scheduled in: ");
+        String location = inputScanner.nextLine().trim();
+        ScheduleSlot rescheduled;
+        if ((rescheduled = scheduleManager.getScheduleSlot(date, startTime, endTime, location)) == null) {
+            System.out.println("The slot with specified attributes was not found!");
+            return;
+        }
+        System.out.println("The required slot is locked on, enter new date on witch the slot will be rescheduled in format \"yyyy-mm-dd\" (\"2023-10-23\") :");
+        String newDate = inputScanner.nextLine().trim();
+        System.out.println("Enter the new starting time of the slot in format \"HH:mm\" (\"12:25\") :");
+        String newStartTime = inputScanner.nextLine().trim();
+        RoomProperties room;
+        System.out.println("Enter new room name:");
+        while ((room = scheduleManager.getRoomByName(inputScanner.nextLine().trim())) == null) {
+            System.out.println("The specified room does not exist! Please select existing room:");
+        }
+        String newLocation = inputScanner.nextLine().trim();
+        scheduleManager.moveScheduleSlot(rescheduled, newDate, startTime, endTime, room);
+        System.out.println("Selected slot was successfully moved!");
     };
 
 
@@ -103,19 +151,18 @@ public class InstructionHandles {
         RoomProperties.Builder roomBuilder = new RoomProperties.Builder();
 
         System.out.println("Enter the room name: ");
-
         roomBuilder.setName(inputScanner.nextLine().trim());
-
 
         System.out.println("Enter room capacity that is positive whole number: ");
         String capacity = inputScanner.nextLine().trim();
+
         if (capacity.matches("\\d+"))
             roomBuilder.setCapacity(Integer.parseInt(capacity));
-        else roomBuilder.setCapacity(1);
+        else roomBuilder.setCapacity(20);
 
-        System.out.println("Does this room have computers? Type \"y\" if yes or \"n\" if no.");
-
-        roomBuilder.setHasComputers(inputScanner.nextLine().trim().equalsIgnoreCase("y"));
+        System.out.println("Does this room have computers? If no press enter else type how many computers does this room have (whole number):");
+        String computers = inputScanner.nextLine().trim();
+        roomBuilder.setHasComputers(computers.matches("\\d+") ? Integer.parseInt(computers) : 0);
 
         System.out.println("Does this room have a projector? Type \"y\" if yes or \"n\" if no.");
 
@@ -137,24 +184,16 @@ public class InstructionHandles {
         }
 
         RoomProperties newRoom = roomBuilder.build();
-        try {
-            scheduleManager.addRoom(newRoom);
-            System.out.println("Room " + newRoom.getName() + " has been created!");
+        scheduleManager.addRoom(newRoom);
+        System.out.println("Room " + newRoom.getName() + " has been created!");
 
-        } catch (ScheduleException e) {
-            System.out.println(e.getMessage());
-        }
 
     };
 
     final Handle removeRoom = inputScanner -> {
         System.out.println("Enter the name of the room you want to be removed: ");
         String roomName = inputScanner.nextLine();
-        try {
-            scheduleManager.deleteRoom(roomName);
-        } catch (ScheduleException e) {
-            System.out.println(e.getMessage());
-        }
+        scheduleManager.deleteRoom(roomName);
         System.out.println("Room " + roomName + " has been removed!");
     };
 
@@ -178,15 +217,13 @@ public class InstructionHandles {
             roomBuilder.setCapacity(Integer.parseInt(inputScanner.nextLine()));
 
         System.out.println("Does this room have computers? Type \"y\" if yes or \"n\" if no or just press enter if you want to keep current state:");
-        String hasComputers = inputScanner.nextLine().trim();
-        if (!hasComputers.isBlank())
-            roomBuilder.setHasComputers(hasComputers.equalsIgnoreCase("y"));
+        String computers = inputScanner.nextLine().trim();
+        roomBuilder.setHasComputers(computers.matches("\\d+") ? Integer.parseInt(computers) : 0);
 
 
         System.out.println("Does this room have a projector? Type \"y\" if yes or \"n\" if no or just press enter if you want to keep current state:");
         String hasProjector = inputScanner.nextLine().trim();
-        if (!hasProjector.isBlank())
-            roomBuilder.setHasProjector(hasProjector.equalsIgnoreCase("y"));
+        roomBuilder.setHasProjector(!hasProjector.isBlank() && hasProjector.equalsIgnoreCase("y"));
 
 
         while (true) {
@@ -257,40 +294,65 @@ public class InstructionHandles {
     final Handle filterSchedule = inputScanner -> {
 
         SearchCriteria.Builder searchBuilder = new SearchCriteria.Builder();
+        String input;
+        System.out.println("Enter lower bound date, that is the earliest for look up. Please enter date in format \"yyyy-mm-dd\" (\"2023-10-23\"). " +
+                "If you don't want to apply lower bound date  search press enter:");
+        if (!(input = inputScanner.nextLine().trim()).isBlank())
+            searchBuilder.setCriteria(LOWER_BOUND_DATE_KEY, input);
 
-        System.out.println("Enter lower bound date, that is the earliest for look up. Please enter date in format \"yyyy-mm-dd\" (\"2023-10-23\") :");
-        searchBuilder.setCriteria(LOWER_BOUND_DATE_KEY, inputScanner.nextLine().trim());
+        System.out.println("Enter upper bound date, that is the latest for look up. Please enter date in format \"yyyy-mm-dd\" (\"2023-10-23\")." +
+                "If you don't want to apply upper bound date search press enter:");
+        if (!(input = inputScanner.nextLine().trim()).isBlank())
+            searchBuilder.setCriteria(UPPER_BOUND_DATE_KEY, input);
 
-        System.out.println("Enter upper bound date, that is the latest for look up. Please enter date in format \"yyyy-mm-dd\" (\"2023-10-23\") :");
-        searchBuilder.setCriteria(UPPER_BOUND_DATE_KEY, inputScanner.nextLine().trim());
+        System.out.println("Enter lower bound time, that is the time of the day earliest for look up. Please enter time in format \"HH:mm\" (\"2023-10-23\")." +
+                "If you don't want to apply lower bound time search press enter:");
+        if (!(input = inputScanner.nextLine().trim()).isBlank())
+            searchBuilder.setCriteria(LOWER_BOUND_TIME_KEY, input);
 
-        System.out.println("Enter lower bound time, that is the time of the day earliest for look up. Please enter time in format \"HH:mm\" (\"2023-10-23\") :");
-        searchBuilder.setCriteria(LOWER_BOUND_DATE_KEY, inputScanner.nextLine().trim());
+        System.out.println("Enter lower bound time, that is the time of the day earliest for look up. Please enter time in format \"HH:mm\" (\"2023-10-23\") " +
+                "If you don't want to apply upper bound time search press enter:");
+        if (!(input = inputScanner.nextLine().trim()).isBlank())
+            searchBuilder.setCriteria(UPPER_BOUND_TIME_KEY, input);
 
-        System.out.println("Enter lower bound time, that is the time of the day earliest for look up. Please enter time in format \"HH:mm\" (\"2023-10-23\") :");
-        searchBuilder.setCriteria(UPPER_BOUND_TIME_KEY, inputScanner.nextLine().trim());
+        List<Constants.WeekDay> queriedDays = new ArrayList<>();
+        System.out.println("If you want to apply search by week day please enter day that is will be acceptable, or just press enter if you dont want to apply search by week day.");
 
+        while (true) {
+            input = inputScanner.nextLine().trim();
+            if (input.isBlank() || input.equalsIgnoreCase("done"))
+                break;
+            queriedDays.add(Enum.valueOf(Constants.WeekDay.class, input.toUpperCase()));
+            System.out.println("If you want to include another day as week day search parameter type it in or write \"done\" to finish week day search configuration.");
+        }
+
+        if (!queriedDays.isEmpty())
+            searchBuilder.setCriteria(WEEK_DAY_KEY, queriedDays);
 
         Map<String, Object> dynamicAttributes = new HashMap<>();
         while (true) {
             System.out.println("Enter name of the attribute you want to apply filter for, or type \"done\" if you want to finish configuring search parameters:");
-            String line = inputScanner.nextLine().trim();
+            input = inputScanner.nextLine().trim();
 
-            if (line.isEmpty())
+            if (input.isEmpty())
                 continue;
 
-            if (line.trim().equalsIgnoreCase("done"))
+            if (input.trim().equalsIgnoreCase("done"))
                 break;
 
-            System.out.println("Enter value for attribute named \"" + line + "\" :");
+            System.out.println("Enter value for attribute named \"" + input + "\" :");
 
-            dynamicAttributes.put(line, inputScanner.nextLine().trim());
+            dynamicAttributes.put(input, inputScanner.nextLine().trim());
         }
         if (!dynamicAttributes.isEmpty())
             searchBuilder.setCriteria(DYNAMIC_ATTRIBUTES_KEY, dynamicAttributes);
 
-        List<ScheduleSlot> result = scheduleManager.searchTimeSlots(searchBuilder.build());
-
+        List<ScheduleSlot> result = scheduleManager.searchScheduleSlots(searchBuilder.build());
+        if (result.isEmpty()) {
+            System.out.println("There is no slot that matches your query.");
+            return;
+        }
+        System.out.println("Search result: ");
         for (ScheduleSlot curr : result) {
             System.out.println(curr.toString());
         }
@@ -301,12 +363,14 @@ public class InstructionHandles {
 
         System.out.println("Enter the path you want to export schedule to:");
         String filePath = inputScanner.nextLine().trim();
-        System.out.println("Enter the starting date for schedule export. So the slots that start on that date and after will be exported:");
+        System.out.println("Enter the starting date for schedule export. So the slots that start on that date and after will be exported," +
+                " or just press enter if you want slots to be exported from the schedules beginning:");
         String startingDate = inputScanner.nextLine().trim();
-        System.out.println("Enter the last date for schedule export. So the slots that before that date including the date itself will be exported:");
+        System.out.println("Enter the last date for schedule export. So the slots that before that date including the date itself will be exported," +
+                " or just press enter if you want slots to be exported until schedules end :");
         String endingDate = inputScanner.nextLine().trim();
         System.out.println(
-                scheduleManager.exportScheduleJSON(filePath, !startingDate.isBlank() ? startingDate : null, !endingDate.isBlank() ? endingDate : null)
+                scheduleManager.exportScheduleJSON(filePath, startingDate.isBlank() ? null : startingDate, endingDate.isBlank() ? null : endingDate)
                         + " object exported file on path: " + filePath + " !");
 
     };
@@ -361,12 +425,27 @@ public class InstructionHandles {
     final Handle exportScheduleCSV = inputScanner -> {
         System.out.println("Enter the path you want to export schedule to:");
         String filePath = inputScanner.nextLine().trim();
-        System.out.println("Enter the starting date for schedule export. So the slots that start on that date and after will be exported. If you want to export slots from the beginning press enter:");
+        System.out.println("Enter the starting date for schedule export. So the slots that start on that date and after will be exported," +
+                " or just press enter if you want slots to be exported from the schedules beginning:");
         String startingDate = inputScanner.nextLine().trim();
-        System.out.println("Enter the last date for schedule export. So the slots that before that date including the date itself will be exported. If you want to export  slots until the last date in schedule press enter:");
-        String endingDate = inputScanner.nextLine();
+        System.out.println("Enter the last date for schedule export. So the slots that before that date including the date itself will be exported," +
+                " or just press enter if you want slots to be exported until schedules end :");
+        String endingDate = inputScanner.nextLine().trim();
+        List<String> includeAttr = new ArrayList<>();
+        while (true) {
+            System.out.println("Enter name of the additional attribute to include in csv header,\nor done if you dont want to add more attributes: ");
+            String input = inputScanner.nextLine().trim();
+            if (input.equalsIgnoreCase("done"))
+                break;
+            includeAttr.add(input);
+        }
         System.out.println(
-                scheduleManager.exportScheduleCSV(filePath, startingDate.isBlank() ? endingDate : null, endingDate.isBlank() ? endingDate : null)
+                scheduleManager.exportScheduleCSV(
+                        filePath,
+                        (startingDate.isBlank() ? null : startingDate),
+                        endingDate.isBlank() ? null : endingDate,
+                        includeAttr.toArray(new String[0])
+                )
                         + " object exported file on path: " + filePath + " !");
     };
 
@@ -413,6 +492,11 @@ public class InstructionHandles {
                         + " object exported file on path: " + filePath + " !");
     };
 
+    private Handle excludeDay = inputScanner -> {
+        System.out.println("Ented day that you want to be excluded: ");
+        scheduleManager.setExcludedWeekDays(Enum.valueOf(Constants.WeekDay.class, inputScanner.nextLine().trim().toUpperCase()));
+
+    };
 
     public InstructionHandles() {
 
@@ -447,6 +531,7 @@ public class InstructionHandles {
         handlesMap.put("export_filtered_schedule_json", exportFilteredScheduleJSON);
         handlesMap.put("export_schedule_csv", exportScheduleCSV);
         handlesMap.put("export_filtered_schedule_scv", exportFilteredScheduleCSV);
+        handlesMap.put("exclude_day", excludeDay);
     }
 
 

@@ -1,5 +1,5 @@
 name,capacity,has_computers,has_projector ,nice_view, tabla
-room3, 10, true, true, 4, true
-najgora uciona, 2 , false, false , 0, false
-room4, 15,true , false, 4,false
-alija, 4,false, true, 11, false
+room3, 10, 10, false, yes , yes
+najgora uciona, 20 , 0, false, no, yes
+room4, 15, 3, false, yes, no
+alija, 30, 0, true, no, no

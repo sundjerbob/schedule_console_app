@@ -1,10 +1,8 @@
 package raf.sk_schedule.controller;
 
-import raf.sk_schedule.api.ScheduleManager;
 import raf.sk_schedule.engine.InputScanner;
 import raf.sk_schedule.instructions.InstructionHandles;
 
-import java.util.Scanner;
 
 import static raf.sk_schedule.config.ScheduleAppConfig.scheduleManager;
 
@@ -14,6 +12,7 @@ public class ScheduleAppController {
     private final InstructionHandles instructionHandles;
 
     InputScanner inputScanner;
+
 
     final String helpFilePath = "src/main/java/raf/sk_schedule/toolkit/help.txt";
 
@@ -48,10 +47,10 @@ public class ScheduleAppController {
                 return this;
 
             } catch (Exception e) {
-                if (e.getMessage().equalsIgnoreCase("Console reader closed!"))
+                if (inputScanner.isOpen)
+                    System.err.println("Schedule unit initialization failed: " + e.getMessage());
+                else
                     return null;
-
-                System.err.println("Schedule unit initialization failed: " + e.getMessage());
             }
         }
     }
@@ -60,7 +59,6 @@ public class ScheduleAppController {
     public boolean instructionScheduler() {
         try {
             String command = inputScanner.nextLine().trim().toLowerCase();
-
 
             InstructionHandles.Handle handle = instructionHandles.getHandle(command);
 
@@ -72,11 +70,13 @@ public class ScheduleAppController {
 
             return true;
         } catch (Exception e) {
-            if (!e.getMessage().equals("Console reader closed!"))
+            if (inputScanner.isOpen) {
+                e.printStackTrace(System.err);
                 System.err.println(e.getMessage());
-            return false;
+                return true;
+            }
         }
-
+        return false;
     }
 
 }

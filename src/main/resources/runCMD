@@ -1,0 +1,3 @@
+java -jar  target\schedule_console_app-1.0-SNAPSHOT-jar-with-dependencies.jar raf.sk_schedule.ScheduleSlotsManager
+
+* call this from project root dir *

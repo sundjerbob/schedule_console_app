@@ -15,8 +15,10 @@ public class InputScanner {
 
     public String nextLine() {
         String nextLine = scanner.nextLine();
-        if (nextLine.equalsIgnoreCase(CLOSING_KEYWORD))
+        if (nextLine.equalsIgnoreCase(CLOSING_KEYWORD)) {
+            isOpen = false;
             throw new RuntimeException("Console reader closed!");
+        }
 
         return nextLine;
     }
