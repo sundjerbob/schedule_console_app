@@ -39,6 +39,7 @@ public class InstructionHandles {
         String scheduleOn = inputScanner.nextLine().trim();
 
         if (!scheduleOn.matches("\\d{4}-\\d{2}-\\d{2}")) {
+
             System.out.println("Enter Enter date in format \"yyyy-mm-dd\" (\"2023-10-23\"), starting from witch slot will be scheduled on every " + scheduleOn.toLowerCase() + " :");
             String lowerBoundDate = inputScanner.nextLine().trim();
 
@@ -55,8 +56,16 @@ public class InstructionHandles {
             System.out.println("Enter slots duration in minutes (whole number), or ending time in format \"HH:mm\" (\"12:25\") :");
             String durOrEnd = inputScanner.nextLine().trim();
 
+            RoomProperties room;
+            System.out.println("Enter room name: ");
+            while ((room = scheduleManager.getRoomByName(inputScanner.nextLine().trim())) == null) {
+                System.out.println("There is no room with that name! Please choose existing rooms name.");
+            }
             RepetitiveScheduleMapper.Builder scheduleMapper = new RepetitiveScheduleMapper.Builder()
-                    .setWeekDay(Enum.valueOf(Constants.WeekDay.class, scheduleOn))
+                    .setLocation(room)
+                    .setRecurrenceIntervalStart(parseDate(lowerBoundDate))
+                    .setRecurrenceIntervalEnd(parseDate(upperBoundDate))
+                    .setWeekDay(Enum.valueOf(Constants.WeekDay.class, scheduleOn.toUpperCase()))
                     .setRecurrencePeriod(7)
                     .setStartTime(startTime);
             if (durOrEnd.matches("\\d+"))
@@ -64,13 +73,15 @@ public class InstructionHandles {
             else if (durOrEnd.matches("\\d{2}:\\d{2}"))
                 scheduleMapper.setEndTime(durOrEnd);
 
-            List<ScheduleSlot> bookedSlots = scheduleManager.bookRepetitiveScheduleSlot(scheduleMapper.build());
+            List<ScheduleSlot> bookedSlots = scheduleManager.bookRepetitiveScheduleSlot(scheduleMapper.setRecurrencePeriod(7).build());
+
             StringBuilder message = new StringBuilder("The slots that have been booked:\n");
             for (ScheduleSlot booked : bookedSlots) {
                 message.append(booked.toString()).append('\n');
             }
             System.out.println(message);
             return;
+
         } else {
 
             slotBuilder.setDate(parseDate(scheduleOn));
@@ -133,16 +144,21 @@ public class InstructionHandles {
             return;
         }
         System.out.println("The required slot is locked on, enter new date on witch the slot will be rescheduled in format \"yyyy-mm-dd\" (\"2023-10-23\") :");
-        String newDate = inputScanner.nextLine().trim();
+        Date newDate = parseDate(inputScanner.nextLine().trim());
+
         System.out.println("Enter the new starting time of the slot in format \"HH:mm\" (\"12:25\") :");
         String newStartTime = inputScanner.nextLine().trim();
-        RoomProperties room;
+
+        System.out.println("Enter the new ending time of the slot in format \"HH:mm\" (\"12:25\") :");
+        String newEndingTime = inputScanner.nextLine().trim();
+
+        RoomProperties newRoom;
         System.out.println("Enter new room name:");
-        while ((room = scheduleManager.getRoomByName(inputScanner.nextLine().trim())) == null) {
+        while ((newRoom = scheduleManager.getRoomByName(inputScanner.nextLine().trim())) == null) {
             System.out.println("The specified room does not exist! Please select existing room:");
         }
         String newLocation = inputScanner.nextLine().trim();
-        scheduleManager.moveScheduleSlot(rescheduled, newDate, startTime, endTime, room);
+        scheduleManager.moveScheduleSlot(rescheduled, newDate, newStartTime, newEndingTime, newRoom);
         System.out.println("Selected slot was successfully moved!");
     };
 
@@ -315,9 +331,17 @@ public class InstructionHandles {
         if (!(input = inputScanner.nextLine().trim()).isBlank())
             searchBuilder.setCriteria(UPPER_BOUND_TIME_KEY, input);
 
+        System.out.println("If you want to perform schedule filtering based on location please insert room name or type enter:");
+        if (!(input = inputScanner.nextLine().trim()).isBlank()) {
+            while (!scheduleManager.hasRoom(input)) {
+                System.out.println("There is no room with that name, please select existing room: ");
+                input = inputScanner.nextLine();
+            }
+            searchBuilder.setCriteria(LOCATION_KEY, scheduleManager.getRoomByName(input));
+        }
+
         List<Constants.WeekDay> queriedDays = new ArrayList<>();
         System.out.println("If you want to apply search by week day please enter day that is will be acceptable, or just press enter if you dont want to apply search by week day.");
-
         while (true) {
             input = inputScanner.nextLine().trim();
             if (input.isBlank() || input.equalsIgnoreCase("done"))
@@ -439,6 +463,7 @@ public class InstructionHandles {
                 break;
             includeAttr.add(input);
         }
+
         System.out.println(
                 scheduleManager.exportScheduleCSV(
                         filePath,

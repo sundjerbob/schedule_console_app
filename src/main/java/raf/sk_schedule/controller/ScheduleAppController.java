@@ -71,7 +71,7 @@ public class ScheduleAppController {
             return true;
         } catch (Exception e) {
             if (inputScanner.isOpen) {
-                e.printStackTrace(System.err);
+                // e.printStackTrace(System.err);
                 System.err.println(e.getMessage());
                 return true;
             }
